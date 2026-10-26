@@ -26,7 +26,7 @@ export default function ProductsPage() {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
-            'Accept-Language': i18n.language // تمرير اللغة الحالية للباك إند
+            'Accept-Language': i18n.language // تمرير لغة المتجر الحالية
           },
         });
 
@@ -49,7 +49,7 @@ export default function ProductsPage() {
     fetchProducts();
   }, [i18n.language, navigate]);
 
-  // استخراج الترجمة بدقة (العربية أو الإنجليزية كبديل)
+  // دالة استخراج الترجمة (للعنوان والوصف)
   const getTranslated = (translationsObj, fieldName) => {
     if (!translationsObj) return '';
     const lang = i18n.language.startsWith('ar') ? 'ar' : 'en';
@@ -60,13 +60,13 @@ export default function ProductsPage() {
     return translationsObj['en']?.[fieldName] || '';
   };
 
-  // معالجة روابط الصور سواء كانت محلية أو سحابية
+  // دالة معالجة رابط الصورة لضمان ظهورها من السيرفر
   const getImageUrl = (imagePath) => {
     if (!imagePath) return '';
     if (imagePath.startsWith('http')) {
       return imagePath;
     }
-    const backendUrl = 'http://127.0.0.1:8000'; // استبدله برابط سيرفر Render عند الإنتاج
+    const backendUrl = 'http://127.0.0.1:8000'; 
     return `${backendUrl}${imagePath}`;
   };
 
@@ -76,23 +76,26 @@ export default function ProductsPage() {
   return (
     <div dir={currentDir} className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6 text-[#003046]">
-        {t('luxury_collection', 'Luxury Collection (Shoes & Bags)')}
-      </h1>
+{t('titleproduct')}      </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {products.map((product) => {
           const title = getTranslated(product.translations, 'title');
           const description = getTranslated(product.translations, 'description');
-          const imageUrl = getImageUrl(product.image);
+          const imageUrl = getImageUrl(product.image); // معالجة رابط الصورة القادم من Neon
 
           return (
             <div key={product.id} className="border rounded-lg p-4 shadow-md bg-white flex flex-col justify-between">
-              {imageUrl && (
+              {imageUrl ? (
                 <img 
                   src={imageUrl} 
                   alt={title} 
                   className="w-full h-48 object-cover rounded-md mb-4"
                 />
+              ) : (
+                <div className="w-full h-48 bg-gray-200 rounded-md mb-4 flex items-center justify-center text-gray-400">
+                  No Image Available
+                </div>
               )}
               
               <div>

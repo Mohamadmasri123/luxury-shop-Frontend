@@ -1,23 +1,26 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useNavigate, Link } from 'react-router-dom';
 
-export default function Register() {
-  const { i18n } = useTranslation();
+export default function RegisterPage() {
   const navigate = useNavigate();
-  const isArabic = i18n.language === 'ar';
-
-  const [formData, setFormData] = useState({ username: '', email: '', password: '' });
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    first_name: '',
+    last_name: ''
+  });
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleRegister = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
 
     try {
-      // الاتصال برابط الباك إند في Django
       const response = await fetch('http://127.0.0.1:8000/api/accounts/register/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -25,92 +28,99 @@ export default function Register() {
       });
 
       if (response.ok) {
-        // إذا نجح التسجيل، نحول المستخدم لصفحة تسجيل الدخول
+        // بعد نجاح التسجيل، نقوم بتوجيهه لصفحة تسجيل الدخول ليقوم بالدخول بحسابه الجديد
         navigate('/login');
       } else {
         const data = await response.json();
-        setError(data.username || data.password || (isArabic ? 'فشل إنشاء الحساب، يرجى المحاولة لاحقاً' : 'Registration failed'));
+        setError(data.username || data.email || 'حدث خطأ أثناء إنشاء الحساب، تأكد من البيانات');
       }
     } catch (err) {
-      setError(isArabic ? 'حدث خطأ في الاتصال بالسيرفر (تأكد أن Django يعمل)' : 'Server connection error');
-    } finally {
-      setLoading(false);
+      setError('تعذر الاتصال بالخادم، تأكد من تشغيل الباك إند');
     }
   };
 
   return (
-    <div className="min-h-[75vh] flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
-        
-        <div className="text-center mb-8">
-          <span className="text-3xl font-black text-[#003046] tracking-wider block">LS</span>
-          <h2 className="mt-3 text-2xl font-bold text-[#003046]">
-            {isArabic ? 'إنشاء حساب جديد' : 'Create Account'}
-          </h2>
-        </div>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 border border-gray-100 relative">
+        <Link to="/" className="absolute top-5 left-5 text-gray-400 hover:text-gray-700 text-lg">
+          ✕
+        </Link>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-xs font-medium text-center">
-            {error}
+        <h2 className="text-2xl font-bold text-[#003046] mb-6 text-center">إنشاء حساب جديد - Luxury Shop</h2>
+
+        {error && <div className="bg-red-50 text-red-600 text-xs p-3 rounded-xl mb-4 text-center">{error}</div>}
+
+        <form onSubmit={handleRegister} className="space-y-4">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">الاسم الأول</label>
+              <input 
+                type="text" 
+                name="first_name"
+                value={formData.first_name} 
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#003046]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">اسم العائلة</label>
+              <input 
+                type="text" 
+                name="last_name"
+                value={formData.last_name} 
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#003046]"
+              />
+            </div>
           </div>
-        )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">
-              {isArabic ? 'اسم المستخدم' : 'Username'}
-            </label>
-            <input
-              type="text"
+            <label className="block text-xs font-semibold text-gray-600 mb-1">اسم المستخدم</label>
+            <input 
+              type="text" 
+              name="username"
+              value={formData.username} 
+              onChange={handleChange}
               required
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-sm text-gray-800 focus:outline-none focus:border-[#003046] focus:bg-white transition"
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#003046]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">
-              {isArabic ? 'البريد الإلكتروني' : 'Email Address'}
-            </label>
-            <input
-              type="email"
+            <label className="block text-xs font-semibold text-gray-600 mb-1">البريد الإلكتروني</label>
+            <input 
+              type="email" 
+              name="email"
+              value={formData.email} 
+              onChange={handleChange}
               required
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-sm text-gray-800 focus:outline-none focus:border-[#003046] focus:bg-white transition"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#003046]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">
-              {isArabic ? 'كلمة المرور' : 'Password'}
-            </label>
-            <input
-              type="password"
+            <label className="block text-xs font-semibold text-gray-600 mb-1">كلمة المرور</label>
+            <input 
+              type="password" 
+              name="password"
+              value={formData.password} 
+              onChange={handleChange}
               required
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-sm text-gray-800 focus:outline-none focus:border-[#003046] focus:bg-white transition"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#003046]"
             />
           </div>
 
-          <button
+          <button 
             type="submit"
-            disabled={loading}
-            className="w-full bg-[#003046] hover:bg-[#002233] text-white font-bold py-3.5 rounded-xl shadow-lg transition duration-200 mt-2 cursor-pointer"
+            className="w-full bg-[#003046] hover:bg-[#002233] text-white font-bold py-3 rounded-xl shadow-lg transition text-sm"
           >
-            {loading ? (isArabic ? 'جاري التسجيل...' : 'Creating...') : (isArabic ? 'تسجيل حساب' : 'Register')}
+            إنشاء الحساب
           </button>
         </form>
 
         <div className="mt-6 text-center text-xs text-gray-500">
-          {isArabic ? 'لديك حساب بالفعل؟ ' : 'Already have an account? '}
-          <Link to="/login" className="font-bold text-[#003046] hover:underline">
-            {isArabic ? 'تسجيل الدخول' : 'Sign In'}
-          </Link>
+          لديك حساب بالفعل؟ <Link to="/login" className="text-[#003046] font-bold hover:underline">سجل دخولك هنا</Link>
         </div>
-
       </div>
     </div>
   );
